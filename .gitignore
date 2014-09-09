@@ -1,0 +1,4 @@
+*.exe
+*.o
+project1/LINUX_OR_MINGW/assimp_log.txt
+project1/LINUX_OR_MINGW/models-textures
