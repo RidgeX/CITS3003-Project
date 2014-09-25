@@ -47,6 +47,7 @@ void main() {
 	// globalAmbient is independent of distance from the light source
 	vec3 globalAmbient = vec3(0.1, 0.1, 0.1);
 
-	vec4 color = vec4(globalAmbient + ambient1 + ambient2 + diffuse1 + diffuse2, 1.0);
-	fColor = color * texture2D(texture, texCoord * 2.0) + vec4(specular1 + specular2, 1.0);
+	float len = length(fL1);
+	vec4 color = vec4(globalAmbient + ((ambient1 + diffuse1) / len) + ambient2 + diffuse2, 1.0);
+	fColor = color * texture2D(texture, texCoord * 2.0) + vec4((specular1 / len) + specular2, 1.0);
 }
