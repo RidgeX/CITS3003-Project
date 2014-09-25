@@ -435,6 +435,18 @@ static int createArrayMenu(int size, const char menuEntries[][128], void(*menuFn
 	return menuId;
 }
 
+static void adjustAmbientDiffuse(vec2 ad) {
+	SceneObject *obj = &sceneObjs[toolObj];
+	obj->ambient = max(0.0f, obj->ambient + ad[0]);
+	obj->diffuse = max(0.0f, obj->diffuse + ad[1]);
+}
+
+static void adjustSpecularShine(vec2 ss) {
+	SceneObject *obj = &sceneObjs[toolObj];
+	obj->specular = max(0.0f, obj->specular + ss[0]);
+	obj->shine = max(0.0f, obj->shine + ss[1]);
+}
+
 static void materialMenu(int id) {
 	deactivateTool();
 	if (currObject >= 0) {
@@ -442,6 +454,11 @@ static void materialMenu(int id) {
 			toolObj = currObject;
 			setToolCallbacks(adjustRedGreen, mat2(1.0, 0.0, 0.0, 1.0),
 					adjustBlueBrightness, mat2(1.0, 0.0, 0.0, 1.0));
+		} else if (id == 20) {
+			// [C] Adjust ambient/diffuse/specular lighting and shininess.
+			toolObj = currObject;
+			setToolCallbacks(adjustAmbientDiffuse, mat2(1.0, 0.0, 0.0, 1.0),
+					adjustSpecularShine, mat2(1.0, 0.0, 0.0, 10.0));
 		} else {
 			printf("Error in materialMenu\n");
 			exit(EXIT_FAILURE);
@@ -482,7 +499,7 @@ static void makeMenu() {
 
 	int materialMenuId = glutCreateMenu(materialMenu);
 	glutAddMenuEntry("R/G/B/All", 10);
-	glutAddMenuEntry("UNIMPLEMENTED: Ambient/Diffuse/Specular/Shine", 20);
+	glutAddMenuEntry("Ambient/Diffuse/Specular/Shine", 20);
 
 	int texMenuId = createArrayMenu(numTextures - 1, textureMenuEntries, texMenu);
 	int groundMenuId = createArrayMenu(numTextures - 1, textureMenuEntries, groundMenu);
