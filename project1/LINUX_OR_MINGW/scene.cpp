@@ -23,7 +23,7 @@ GLuint shaderProgram;  // The number identifying the GLSL shader program.
 GLuint vPosition, vNormal, vTexCoord;  // IDs for input variables (from glGetAttribLocation)
 GLuint projectionU, modelViewU;  // IDs for uniform variables (from glGetUniformLocation)
 
-static float viewDist = 1.5;  // Distance from the camera to the centre of the scene.
+static float viewDist = 7.5;  // Distance from the camera to the centre of the scene.
 static float camRotSidewaysDeg = 0.0;  // Rotates the camera sideways around the centre.
 static float camRotUpAndOverDeg = 20.0;  // Rotates the camera up and over the centre.
 
@@ -210,7 +210,7 @@ static void adjustScaleY(vec2 sy) {
 
 // Set the mouse buttons to rotate the camera around the centre of the scene.
 static void doRotate() {
-	setToolCallbacks(adjustCamSideViewDist, mat2(400.0, 0.0, 0.0, -2.0),
+	setToolCallbacks(adjustCamSideViewDist, mat2(400.0, 0.0, 0.0, -10.0),
 			adjustCamSideUp, mat2(400.0, 0.0, 0.0, -90.0));
 }
 
@@ -569,12 +569,10 @@ void reshape(int width, int height) {
 
 	glViewport(0, 0, width, height); CheckError();
 
-	// You'll need to modify this so that the view is similar to that in the sample solution.
-	// In particular:
-	//   - the view should include "closer" visible objects (slightly tricky)
-	GLfloat nearDist = 0.2;
+	GLfloat nearDist = 0.04;
 	GLfloat left, right, bottom, top;
 
+	// [D] Include "closer" visible objects within the view.
 	// [E] When the width is less than the height, adjust the view so that the
 	//     same part of the scene is visible across the width of the window.
 	if (width < height) {
@@ -589,7 +587,7 @@ void reshape(int width, int height) {
 		top = nearDist;
 	}
 
-	projection = Frustum(left, right, bottom, top, nearDist, 100.0);
+	projection = Frustum(left, right, bottom, top, 0.2, 500.0);
 }
 
 void timer(int unused) {
