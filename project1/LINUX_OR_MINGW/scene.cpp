@@ -319,9 +319,9 @@ void drawMesh(SceneObject sceneObj) {
 	// Set the projection matrix for the shaders.
 	glUniformMatrix4fv(projectionU, 1, GL_TRUE, projection); CheckError();
 
-	// Set the model matrix - this should combine translation, rotation and scaling based on what's
-	// in the sceneObj structure (see near the top of the program).
-	mat4 model = Translate(sceneObj.loc) * Scale(sceneObj.scale);
+	// [B] Set the model matrix.
+	mat4 rot = RotateX(sceneObj.angles[0]) * RotateY(sceneObj.angles[1]) * RotateZ(sceneObj.angles[2]);
+	mat4 model = Translate(sceneObj.loc) * rot * Scale(sceneObj.scale);
 
 	// Set the model-view matrix for the shaders.
 	glUniformMatrix4fv(modelViewU, 1, GL_TRUE, view * model); CheckError();
@@ -470,8 +470,8 @@ static void mainMenu(int id) {
 	} else if (id == 50) {
 		doRotate();
 	} else if (id == 55 && currObject >= 0) {
-		setToolCallbacks(adjustAngleYX, mat2(400.0, 0.0, 0.0, -400.0),
-				adjustAngleZTexScale, mat2(400.0, 0.0, 0.0, 15.0));
+		setToolCallbacks(adjustAngleYX, mat2(400.0, 0.0, 0.0, 400.0),
+				adjustAngleZTexScale, mat2(-400.0, 0.0, 0.0, 15.0));
 	} else if (id == 99) {
 		exit(EXIT_SUCCESS);
 	}
