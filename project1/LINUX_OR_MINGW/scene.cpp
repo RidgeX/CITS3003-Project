@@ -399,6 +399,7 @@ static void adjustBlueBrightness(vec2 bl_br) {
 	obj->rgb[2] = max(0.0f, obj->rgb[2] + bl_br[0]);
 	obj->brightness = max(0.0f, obj->brightness + bl_br[1]);
 }
+
 static void lightMenu(int id) {
 	deactivateTool();
 	if (id == 70) {
@@ -546,19 +547,26 @@ void reshape(int width, int height) {
 	glViewport(0, 0, width, height); CheckError();
 
 	// You'll need to modify this so that the view is similar to that in the sample solution.
-	// In particular: 
+	// In particular:
 	//   - the view should include "closer" visible objects (slightly tricky)
-	//   - when the width is less than the height, the view should adjust so that the same part
-	//     of the scene is visible across the width of the window.
 	GLfloat nearDist = 0.2;
-	projection = Frustum(
-		-nearDist * (float) width / (float) height,
-		nearDist * (float) width / (float) height,
-		-nearDist,
-		nearDist,
-		nearDist,
-		100.0
-	);
+	GLfloat left, right, bottom, top;
+
+	// [E] When the width is less than the height, adjust the view so that the
+	//     same part of the scene is visible across the width of the window.
+	if (width < height) {
+		left = -nearDist;
+		right = nearDist;
+		bottom = -nearDist * (float) height / (float) width;
+		top = nearDist * (float) height / (float) width;
+	} else {
+		left = -nearDist * (float) width / (float) height;
+		right = nearDist * (float) width / (float) height;
+		bottom = -nearDist;
+		top = nearDist;
+	}
+
+	projection = Frustum(left, right, bottom, top, nearDist, 100.0);
 }
 
 void timer(int unused) {
