@@ -12,6 +12,7 @@ uniform float LightBrightness1, LightBrightness2;
 uniform vec3 AmbientProduct, DiffuseProduct, SpecularProduct;
 uniform float Shininess;
 uniform sampler2D texture;
+uniform float texScale;
 
 void main() {
 	// Unit direction vectors for Blinn-Phong shading calculation
@@ -47,7 +48,8 @@ void main() {
 	// globalAmbient is independent of distance from the light source
 	vec3 globalAmbient = vec3(0.1, 0.1, 0.1);
 
-	float len = length(fL1);
+	// [F] Reduce point light with distance
+	float len = 0.01 + length(fL1);
 	vec4 color = vec4(globalAmbient + ((ambient1 + diffuse1) / len) + ambient2 + diffuse2, 1.0);
-	fColor = color * texture2D(texture, texCoord * 2.0) + vec4((specular1 / len) + specular2, 1.0);
+	fColor = color * texture2D(texture, texCoord * texScale) + vec4((specular1 / len) + specular2, 1.0);
 }
