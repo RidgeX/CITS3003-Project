@@ -338,9 +338,8 @@ void display(void) {
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); CheckError();
 
-	// Set the view matrix.  To start with this just moves the camera backwards.  You'll need to
-	// add appropriate rotations.
-	view = Translate(0.0, 0.0, -viewDist);
+	// [A] Set the view matrix.
+	view = Translate(0.0, 0.0, -viewDist) * RotateX(camRotUpAndOverDeg) * RotateY(camRotSidewaysDeg);
 
 	SceneObject lightObj1 = sceneObjs[1];
 	vec4 lightPosition = view * lightObj1.loc;
