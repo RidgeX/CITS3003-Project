@@ -298,7 +298,7 @@ void init(void) {
 	lightObj2->loc = vec4(-2.0, 1.0, -1.0, 1.0);
 	lightObj2->scale = 0.1;
 	lightObj2->texId = 0;  // Plain texture
-	lightObj2->brightness = 0.1;
+	lightObj2->brightness = 0.5;
 
 	addObject(1 + (rand() % (numMeshes - 1)));  // A test mesh
 
@@ -347,12 +347,13 @@ void display(void) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); CheckError();
 
 	// [A] Set the view matrix.
-	view = Translate(0.0, 0.0, -viewDist) * RotateX(camRotUpAndOverDeg) * RotateY(camRotSidewaysDeg);
+	mat4 rot = RotateX(camRotUpAndOverDeg) * RotateY(camRotSidewaysDeg);
+	view = Translate(0.0, 0.0, -viewDist) * rot;
 
 	SceneObject lightObj1 = sceneObjs[1];
 	vec4 lightPosition1 = view * lightObj1.loc;
 	SceneObject lightObj2 = sceneObjs[2];
-	vec4 lightPosition2 = view * lightObj2.loc;
+	vec4 lightPosition2 = rot * lightObj2.loc;
 
 	glUniform4fv(glGetUniformLocation(shaderProgram, "LightPosition1"), 1, lightPosition1); CheckError();
 	glUniform4fv(glGetUniformLocation(shaderProgram, "LightPosition2"), 1, lightPosition2); CheckError();
