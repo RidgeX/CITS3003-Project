@@ -64,6 +64,8 @@ typedef struct {
 } SceneObject;
 
 const int maxObjects = 1024;  // Scenes with more than 1024 objects seem unlikely.
+const int numSaves = 30;
+const int saveHeader = ('S' | 'A' << 8 | 'V' << 16 | 'E' << 24);
 
 SceneObject sceneObjs[maxObjects];  // An array storing the objects currently in the scene.
 int nObjects = 0;  // How many objects are currently in the scene.
@@ -519,6 +521,55 @@ static void mainMenu(int id) {
 	}
 }
 
+static void loadMenu(int id) {
+	char fileName[256];
+	sprintf(fileName, "slot%d.sav", id);
+
+	FILE *file = fopen(fileName, "r");
+	if (file == NULL) {
+		fprintf(stderr, "Error: Could not open '%s' for reading\n", fileName);
+		exit(EXIT_FAILURE);
+	}
+
+	int header;
+	fread(&header, sizeof(int), 1, file);
+	if (header != saveHeader) {
+		fprintf(stderr, "Error: Invalid save file header");
+		exit(EXIT_FAILURE);
+	}
+	fread(&viewDist, sizeof(float), 1, file);
+	fread(&camRotSidewaysDeg, sizeof(float), 1, file);
+	fread(&camRotUpAndOverDeg, sizeof(float), 1, file);
+	fread(&nObjects, sizeof(int), 1, file);
+	fread(sceneObjs, sizeof(SceneObject) * nObjects, 1, file);
+
+	currObject = nObjects - 1;
+	toolObj = -1;
+	doRotate();
+
+	fclose(file);
+}
+
+static void saveMenu(int id) {
+	char fileName[256];
+	sprintf(fileName, "slot%d.sav", id);
+
+	FILE *file = fopen(fileName, "w");
+	if (file == NULL) {
+		fprintf(stderr, "Error: Could not open '%s' for writing\n", fileName);
+		exit(EXIT_FAILURE);
+	}
+
+	fwrite(&saveHeader, sizeof(int), 1, file);
+	fwrite(&viewDist, sizeof(float), 1, file);
+	fwrite(&camRotSidewaysDeg, sizeof(float), 1, file);
+	fwrite(&camRotUpAndOverDeg, sizeof(float), 1, file);
+	fwrite(&nObjects, sizeof(int), 1, file);
+	fwrite(sceneObjs, sizeof(SceneObject) * nObjects, 1, file);
+
+	fclose(file);
+}
+
 static void makeMenu() {
 	int objectId = createArrayMenu(numMeshes - 1, objectMenuEntries, objectMenu);
 
@@ -535,6 +586,13 @@ static void makeMenu() {
 	glutAddMenuEntry("Move Light 2", 80);
 	glutAddMenuEntry("R/G/B/All Light 2", 81);
 
+	char saveMenuEntries[numSaves][128];
+	for (int i = 0; i < numSaves; i++) {
+		sprintf(saveMenuEntries[i], "Slot %d", i+1);
+	}
+	int loadMenuId = createArrayMenu(numSaves, saveMenuEntries, loadMenu);
+	int saveMenuId = createArrayMenu(numSaves, saveMenuEntries, saveMenu);
+
 	glutCreateMenu(mainMenu);
 	glutAddMenuEntry("Rotate/Move Camera", 50);
 	glutAddSubMenu("Add object", objectId);
@@ -544,6 +602,8 @@ static void makeMenu() {
 	glutAddSubMenu("Texture", texMenuId);
 	glutAddSubMenu("Ground Texture", groundMenuId);
 	glutAddSubMenu("Lights", lightMenuId);
+	glutAddSubMenu("Load scene", loadMenuId);
+	glutAddSubMenu("Save scene", saveMenuId);
 	glutAddMenuEntry("EXIT", 99);
 	glutAttachMenu(GLUT_RIGHT_BUTTON);
 }
