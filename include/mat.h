@@ -726,6 +726,7 @@ mat4 Frustum( const GLfloat left, const GLfloat right,
     c[2][2] = -(zFar + zNear)/(zFar - zNear);
     c[2][3] = -2.0*zFar*zNear/(zFar - zNear);
     c[3][2] = -1.0;
+    c[3][3] = 0.0;
     return c;
 }
 
@@ -742,6 +743,7 @@ mat4 Perspective( const GLfloat fovy, const GLfloat aspect,
     c[2][2] = -(zFar + zNear)/(zFar - zNear);
     c[2][3] = -2.0*zFar*zNear/(zFar - zNear);
     c[3][2] = -1.0;
+    c[3][3] = 0.0;
     return c;
 }
 
