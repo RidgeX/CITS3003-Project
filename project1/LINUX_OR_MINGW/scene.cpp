@@ -528,14 +528,15 @@ static void loadMenu(int id) {
 	FILE *file = fopen(fileName, "r");
 	if (file == NULL) {
 		fprintf(stderr, "Error: Could not open '%s' for reading\n", fileName);
-		exit(EXIT_FAILURE);
+		return;
 	}
 
 	int header;
 	fread(&header, sizeof(int), 1, file);
 	if (header != saveHeader) {
 		fprintf(stderr, "Error: Invalid save file header");
-		exit(EXIT_FAILURE);
+		fclose(file);
+		return;
 	}
 	fread(&viewDist, sizeof(float), 1, file);
 	fread(&camRotSidewaysDeg, sizeof(float), 1, file);
@@ -557,7 +558,7 @@ static void saveMenu(int id) {
 	FILE *file = fopen(fileName, "w");
 	if (file == NULL) {
 		fprintf(stderr, "Error: Could not open '%s' for writing\n", fileName);
-		exit(EXIT_FAILURE);
+		return;
 	}
 
 	fwrite(&saveHeader, sizeof(int), 1, file);
