@@ -550,7 +550,7 @@ static void loadMenu(int id) {
 	char fileName[256];
 	sprintf(fileName, "slot%d.sav", id);
 
-	FILE *file = fopen(fileName, "r");
+	FILE *file = fopen(fileName, "rb");
 	if (file == NULL) {
 		fprintf(stderr, "Error: Could not open '%s' for reading\n", fileName);
 		return;
@@ -581,7 +581,7 @@ static void saveMenu(int id) {
 	char fileName[256];
 	sprintf(fileName, "slot%d.sav", id);
 
-	FILE *file = fopen(fileName, "w");
+	FILE *file = fopen(fileName, "wb");
 	if (file == NULL) {
 		fprintf(stderr, "Error: Could not open '%s' for writing\n", fileName);
 		return;
