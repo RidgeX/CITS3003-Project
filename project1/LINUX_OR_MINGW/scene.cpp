@@ -2,6 +2,7 @@
 
 #include <dirent.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 
 // Open Asset Importer header files (in ../../assimp--3.0.1270/include)
@@ -566,7 +567,8 @@ static void loadMenu(int id) {
 	fread(&camRotSidewaysDeg, sizeof(float), 1, file);
 	fread(&camRotUpAndOverDeg, sizeof(float), 1, file);
 	fread(&nObjects, sizeof(int), 1, file);
-	fread(sceneObjs, sizeof(SceneObject) * nObjects, 1, file);
+	memset(sceneObjs, 0, sizeof(SceneObject) * nObjects);
+	fread(sceneObjs, sizeof(SceneObject), nObjects, file);
 
 	currObject = nObjects - 1;
 	toolObj = -1;
@@ -590,8 +592,9 @@ static void saveMenu(int id) {
 	fwrite(&camRotSidewaysDeg, sizeof(float), 1, file);
 	fwrite(&camRotUpAndOverDeg, sizeof(float), 1, file);
 	fwrite(&nObjects, sizeof(int), 1, file);
-	fwrite(sceneObjs, sizeof(SceneObject) * nObjects, 1, file);
+	fwrite(sceneObjs, sizeof(SceneObject), nObjects, file);
 
+	fflush(file);
 	fclose(file);
 }
 
