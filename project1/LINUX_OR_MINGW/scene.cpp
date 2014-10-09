@@ -519,7 +519,7 @@ static void deleteObject(int id) {
 	if (nObjects == 3) return;
 
 	nObjects--;
-	currObject = nObjects - 1;
+	currObject = (nObjects > 3 ? nObjects - 1 : -1);
 	toolObj = -1;
 	doRotate();
 	glutPostRedisplay();
