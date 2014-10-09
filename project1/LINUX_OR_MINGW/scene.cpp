@@ -505,6 +505,26 @@ static void adjustAngleZTexScale(vec2 az_ts) {
 	obj->texScale += az_ts[1];
 }
 
+static void duplicateObject(int id) {
+	if (nObjects == maxObjects) return;
+
+	sceneObjs[nObjects] = sceneObjs[id];
+	toolObj = currObject = nObjects++;
+	setToolCallbacks(adjustLocXZ, camRotZ(),
+			adjustScaleY, mat2(0.05, 0.0, 0.0, 10.0));
+	glutPostRedisplay();
+}
+
+static void deleteObject(int id) {
+	if (nObjects == 3) return;
+
+	nObjects--;
+	currObject = nObjects - 1;
+	toolObj = -1;
+	doRotate();
+	glutPostRedisplay();
+}
+
 static void mainMenu(int id) {
 	deactivateTool();
 	if (id == 41 && currObject >= 0) {
@@ -516,6 +536,10 @@ static void mainMenu(int id) {
 	} else if (id == 55 && currObject >= 0) {
 		setToolCallbacks(adjustAngleYX, mat2(400.0, 0.0, 0.0, 400.0),
 				adjustAngleZTexScale, mat2(-400.0, 0.0, 0.0, 15.0));
+	} else if (id == 90 && currObject >= 0) {
+		duplicateObject(currObject);
+	} else if (id == 91 && currObject >= 0) {
+		deleteObject(currObject);
 	} else if (id == 99) {
 		exit(EXIT_SUCCESS);
 	}
@@ -603,6 +627,8 @@ static void makeMenu() {
 	glutAddSubMenu("Texture", texMenuId);
 	glutAddSubMenu("Ground Texture", groundMenuId);
 	glutAddSubMenu("Lights", lightMenuId);
+	glutAddMenuEntry("Duplicate object", 90);
+	glutAddMenuEntry("Delete object", 91);
 	glutAddSubMenu("Load scene", loadMenuId);
 	glutAddSubMenu("Save scene", saveMenuId);
 	glutAddMenuEntry("EXIT", 99);
