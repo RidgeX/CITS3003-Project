@@ -1,0 +1,123 @@
+
+A) GLSL vertex shader
+
+1. Add the following variables to your vertex shader:
+
+    //*************************
+    in ivec4 boneIDs;
+    in  vec4 boneWeights;
+    uniform mat4 boneTransforms[64];
+    //**************************
+
+2. At the start of main() in the vertex shader calculate the bone
+transformation for the current vertex by taking the weighted sum
+of the current bone transformations for the 4 bone-IDs, using the
+given bone-weights.  (Note, some weights may be zero, but this
+shouldn't affect your code.)
+
+E.g., you might have GLSL code like
+
+    mat4 boneTransform = boneWeights[0] * boneTransforms[boneIDs[0]] +
+                         boneWeights[1] * boneTransforms[boneIDs[1]] +
+                         ...
+
+Then apply this transformation to both the vertex position and vertex normal.
+
+3. In the rest of the vertex shader, use the transformed vertex
+position and vertex normal instead of the original one.
+
+
+
+B) C++ code
+
+1. In gnatidread.h increase the number of meshes by 2 to 58 by replacing
+    const int numMeshes = 56;
+with
+    const int numMeshes = 58;
+
+Also add appropriate entries at the end of the initialisation of
+objectMenuEntries for your gingerbread man (which should be model56.x)
+and the test animation (of a monkey head) at:
+
+   http://undergraduate.csse.uwa.edu.au/units/CITS3003/model57.x
+
+
+2. Download the following file and place it in your source code directory: 
+    http://undergraduate.csse.uwa.edu.au/units/CITS3003/gnatidread2.h
+
+Then, in your main C++ file, after the line 
+    #include "gnatidread.h"
+add
+    #include "gnatidread2.h"
+
+3. Add global GLuint variables vBoneIDs, vBoneWeights and
+uBoneTransforms for the locations of the vertex shader variables added in part A. 
+(Similar to the existing vPosition, projectionU, etc.)
+
+Initialise these in the init function like the other shader variable locations.
+(I.e., via glGetAttribLocation/glGetUniformLocation.)
+
+4. Add the following after the declaration of the meshes array
+near the start of the code.  This array stores extra "scene" related
+information for each loaded mesh, including the bone
+transformations for the keyframes of animations.
+
+  //********************************
+   const aiScene* scenes[numMeshes];
+  //********************************
+
+5. Replace the lines in loadMeshIfNotAlreadyLoaded that load a mesh into the meshes array:
+
+    aiMesh* mesh = loadMesh(meshNumber);
+    meshes[meshNumber] = mesh;
+
+with code like the following which also stores the scene for the mesh:
+
+    //********************************** 
+    const aiScene* scene = loadScene(meshNumber);
+    scenes[meshNumber] = scene;
+    aiMesh* mesh = scene->mMeshes[0];
+    meshes[meshNumber] = mesh;;
+    //**********************************
+
+
+6. Add code like the following to the end of loadMeshIfNotAlreadyLoaded to initialise
+the new vertex shader "in"-variables/vertex-attributes via initBones (in gnatidread2.h):
+
+    //**************
+    // Get boneIDs and boneWeights for each vertex from the imported mesh data
+    GLint boneIDs[mesh->mNumVertices][4];
+    GLfloat boneWeights[mesh->mNumVertices][4];
+    getBonesAffectingEachVertex(mesh, boneIDs, boneWeights);
+
+    GLuint buffers[2];
+    glGenBuffers( 2, buffers );  // Add two vertex buffer objects
+    
+    glBindBuffer( GL_ARRAY_BUFFER, buffers[0] ); CheckError();
+    glBufferData( GL_ARRAY_BUFFER, sizeof(int)*4*mesh->mNumVertices, boneIDs, GL_STATIC_DRAW ); CheckError();
+    glVertexAttribIPointer(vBoneIDs, 4, GL_INT, 0, BUFFER_OFFSET(0)); CheckError();
+    glEnableVertexAttribArray(vBoneIDs);     CheckError();
+    
+    glBindBuffer( GL_ARRAY_BUFFER, buffers[1] );
+    glBufferData( GL_ARRAY_BUFFER, sizeof(float)*4*mesh->mNumVertices, boneWeights, GL_STATIC_DRAW );
+    glVertexAttribPointer(vBoneWeights, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
+    glEnableVertexAttribArray(vBoneWeights);    CheckError();
+    //**************
+
+
+7. Add code like following to the drawMesh function to set the new uniform shader variable 
+boneTransforms each time a mesh is drawn.
+
+(This needs to be after the call to loadMeshIfNotAlreadyLoaded and before the call to glDrawElements.)
+
+    //*************
+    int nBones = meshes[sceneObj.meshId]->mNumBones;
+    if(nBones == 0)  nBones = 1;  // If no bones, just a single identity matrix is used
+
+    // get boneTransforms for the first (0th) animation at the given time (a float measured in frames)
+    //    (Replace <POSE_TIME> appropriately with a float expression giving the time relative to
+    //     the start of the animation, measured in frames, like the frame numbers in Blender.)
+    mat4 boneTransforms[nBones];     // was: mat4 boneTransforms[mesh->mNumBones];
+    calculateAnimPose(meshes[sceneObj.meshId], scenes[sceneObj.meshId], 0, <POSE_TIME>, boneTransforms);
+    glUniformMatrix4fv(uBoneTransforms, nBones, GL_TRUE, (const GLfloat *)boneTransforms);
+    //**************
