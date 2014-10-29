@@ -66,6 +66,7 @@ typedef struct {
 	int meshId;
 	int texId;
 	float texScale;
+	float walkSpeed, walkDist;
 } SceneObject;
 
 const int maxObjects = 1024;  // Scenes with more than 1024 objects seem unlikely.
@@ -275,6 +276,14 @@ static void addObject(int id) {
 	obj->texId = 1 + (rand() % (numTextures - 1));
 	obj->texScale = 2.0;
 
+	if (id >= 56) {
+		obj->walkSpeed = 50.0;
+		obj->walkDist = 5.0;
+	} else {
+		obj->walkSpeed = 0.0;
+		obj->walkDist = 0.0;
+	}
+
 	toolObj = currObject = nObjects++;
 	setToolCallbacks(adjustLocXZ, camRotZ(),
 			adjustScaleY, mat2(0.05, 0.0, 0.0, 10.0));
@@ -350,11 +359,20 @@ void drawMesh(SceneObject sceneObj) {
 	const aiScene *scene = scenes[sceneObj.meshId];
 
 	float poseTime = 0.0f;
+	float walkTime = 0.0f;
 	if (sceneObj.meshId >= 56) {
-		double framesPerSecond = 30.0;
-		double elapsedTime = glutGet(GLUT_ELAPSED_TIME) / 1000.0 * framesPerSecond;
+		double animCycles = 3.0;
+		double elapsedTime = glutGet(GLUT_ELAPSED_TIME) / 1000.0;
 		double animDuration = getAnimDuration(mesh, scene, 0);
-		poseTime = fmod(elapsedTime, animDuration);
+		float animTime = fmod(elapsedTime * sceneObj.walkSpeed, 2 * animCycles * animDuration);
+		poseTime = fmod(animTime, animDuration);
+		if (animTime >= animCycles * animDuration) {
+			poseTime = animDuration - poseTime;
+		}
+		walkTime = animTime / (animCycles * animDuration);
+		if (walkTime >= 1.0) {
+			walkTime = 2.0 - walkTime;
+		}
 	}
 
 	// Activate a texture.
@@ -373,7 +391,8 @@ void drawMesh(SceneObject sceneObj) {
 
 	// [B] Set the model matrix.
 	mat4 rot = RotateX(sceneObj.angles[0]) * RotateY(sceneObj.angles[1]) * RotateZ(sceneObj.angles[2]);
-	mat4 model = Translate(sceneObj.loc) * rot * Scale(sceneObj.scale);
+	vec4 s = rot * vec4(0.0, 0.0, walkTime * sceneObj.walkDist, 0.0);
+	mat4 model = Translate(sceneObj.loc + s) * rot * Scale(sceneObj.scale);
 
 	// Set the model-view matrix for the shaders.
 	glUniformMatrix4fv(modelViewU, 1, GL_TRUE, view * model); CheckError();
@@ -574,6 +593,12 @@ static void deleteObject(int id) {
 	glutPostRedisplay();
 }
 
+static void adjustWalkSpeedDist(vec2 walk_sd) {
+	SceneObject *obj = &sceneObjs[currObject];
+	obj->walkSpeed = max(0.0f, obj->walkSpeed + walk_sd[0]);
+	obj->walkDist = max(0.0f, obj->walkDist + walk_sd[1]);
+}
+
 static void mainMenu(int id) {
 	deactivateTool();
 	if (id == 41 && currObject >= 0) {
@@ -585,6 +610,9 @@ static void mainMenu(int id) {
 	} else if (id == 55 && currObject >= 0) {
 		setToolCallbacks(adjustAngleYX, mat2(400.0, 0.0, 0.0, 400.0),
 				adjustAngleZTexScale, mat2(-400.0, 0.0, 0.0, 15.0));
+	} else if (id == 60 && currObject >= 0) {
+		setToolCallbacks(adjustWalkSpeedDist, mat2(24.0, 0.0, 0.0, 5.0),
+				adjustWalkSpeedDist, mat2(24.0, 0.0, 0.0, 5.0));
 	} else if (id == 90 && currObject >= 0) {
 		duplicateObject(currObject);
 	} else if (id == 91 && currObject >= 0) {
@@ -678,6 +706,7 @@ static void makeMenu() {
 	glutAddSubMenu("Texture", texMenuId);
 	glutAddSubMenu("Ground Texture", groundMenuId);
 	glutAddSubMenu("Lights", lightMenuId);
+	glutAddMenuEntry("Walk Duration/Distance", 60);
 	glutAddMenuEntry("Duplicate object", 90);
 	glutAddMenuEntry("Delete object", 91);
 	glutAddSubMenu("Load scene", loadMenuId);
