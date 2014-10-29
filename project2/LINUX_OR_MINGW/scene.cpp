@@ -399,6 +399,7 @@ void drawMesh(SceneObject sceneObj) {
 		// Circular
 		float r = sceneObj.walkDist / 2;
 		s = rot * vec4(cos(2 * M_PI * walkTime) * r, 0.0, sin(2 * M_PI * walkTime) * r, 0.0);
+		rot *= RotateY(360 * -walkTime);
 	} else if (sceneObj.motionType == 2) {
 		// Bouncing
 		s = rot * vec4(0.0, abs(sin(3 * M_PI * walkTime)) * 0.3, walkTime * sceneObj.walkDist, 0.0);
