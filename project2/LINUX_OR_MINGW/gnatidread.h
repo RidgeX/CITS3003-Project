@@ -7,7 +7,7 @@
 #include "bitmap.h"
 
 char dataDir[256];  // Stores the path to the models-textures folder.
-const int numMeshes = 58;
+const int numMeshes = 59;
 const int numTextures = 31;
 
 // ---- [Functions to fail with an error message then a string or int] ---------
@@ -109,7 +109,7 @@ char objectMenuEntries[numMeshes][128] = {
 	"41 Horse (head up)", "42 Skull", "43 Fighter Jet I", "44 Toad", "45 Convertible",
 	"46 Porsche II", "47 Hare", "48 Vintage Car", "49 Fighter Jet II", "50 Gargoyle",
 	"51 Chef", "52 Parasaurolophus", "53 Rooster", "54 T-rex", "55 Sphere",
-	"56 Gingerbread Man", "57 Monkey Head"
+	"56 Gingerbread Man", "57 Monkey Head", "58 Thriller"
 };
 
 // ---- [Code for using the mouse to adjust floats] ----------------------------
