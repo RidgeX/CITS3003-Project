@@ -67,6 +67,7 @@ typedef struct {
 	int texId;
 	float texScale;
 	float walkSpeed, walkDist;
+	int motionType;
 } SceneObject;
 
 const int maxObjects = 1024;  // Scenes with more than 1024 objects seem unlikely.
@@ -283,6 +284,7 @@ static void addObject(int id) {
 		obj->walkSpeed = 0.0;
 		obj->walkDist = 0.0;
 	}
+	obj->motionType = 0;
 
 	toolObj = currObject = nObjects++;
 	setToolCallbacks(adjustLocXZ, camRotZ(),
@@ -360,11 +362,12 @@ void drawMesh(SceneObject sceneObj) {
 
 	float poseTime = 0.0f;
 	float walkTime = 0.0f;
+	bool circle = (sceneObj.motionType == 1);
 	if (sceneObj.meshId >= 56) {
 		double animCycles = 3.0;
 		double elapsedTime = glutGet(GLUT_ELAPSED_TIME) / 1000.0;
 		double animDuration = getAnimDuration(mesh, scene, 0);
-		float animTime = fmod(elapsedTime * sceneObj.walkSpeed, 2 * animCycles * animDuration);
+		double animTime = fmod(elapsedTime * sceneObj.walkSpeed, (circle ? 1 : 2) * animCycles * animDuration);
 		poseTime = fmod(animTime, animDuration);
 		if (animTime >= animCycles * animDuration) {
 			poseTime = animDuration - poseTime;
@@ -391,7 +394,18 @@ void drawMesh(SceneObject sceneObj) {
 
 	// [B] Set the model matrix.
 	mat4 rot = RotateX(sceneObj.angles[0]) * RotateY(sceneObj.angles[1]) * RotateZ(sceneObj.angles[2]);
-	vec4 s = rot * vec4(0.0, 0.0, walkTime * sceneObj.walkDist, 0.0);
+	vec4 s;
+	if (sceneObj.motionType == 1) {
+		// Circular
+		float r = sceneObj.walkDist / 2;
+		s = rot * vec4(cos(2 * M_PI * walkTime) * r, 0.0, sin(2 * M_PI * walkTime) * r, 0.0);
+	} else if (sceneObj.motionType == 2) {
+		// Bouncing
+		s = rot * vec4(0.0, abs(sin(3 * M_PI * walkTime)) * 0.3, walkTime * sceneObj.walkDist, 0.0);
+	} else {
+		// Straight line
+		s = rot * vec4(0.0, 0.0, walkTime * sceneObj.walkDist, 0.0);
+	}
 	mat4 model = Translate(sceneObj.loc + s) * rot * Scale(sceneObj.scale);
 
 	// Set the model-view matrix for the shaders.
@@ -613,6 +627,8 @@ static void mainMenu(int id) {
 	} else if (id == 60 && currObject >= 0) {
 		setToolCallbacks(adjustWalkSpeedDist, mat2(24.0, 0.0, 0.0, 5.0),
 				adjustWalkSpeedDist, mat2(24.0, 0.0, 0.0, 5.0));
+	} else if (id == 61 && currObject >= 0) {
+		sceneObjs[currObject].motionType = (sceneObjs[currObject].motionType + 1) % 3;
 	} else if (id == 90 && currObject >= 0) {
 		duplicateObject(currObject);
 	} else if (id == 91 && currObject >= 0) {
@@ -707,6 +723,7 @@ static void makeMenu() {
 	glutAddSubMenu("Ground Texture", groundMenuId);
 	glutAddSubMenu("Lights", lightMenuId);
 	glutAddMenuEntry("Walk Duration/Distance", 60);
+	glutAddMenuEntry("Motion type", 61);
 	glutAddMenuEntry("Duplicate object", 90);
 	glutAddMenuEntry("Delete object", 91);
 	glutAddSubMenu("Load scene", loadMenuId);
